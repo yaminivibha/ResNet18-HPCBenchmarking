@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from optim import SGD, Adam, RMSprop, Adagrad, Adadelta, Adamax, Nadam
+from torch.optim import SGD, Adam, RMSprop, Adagrad, Adadelta, Adamax
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 
@@ -19,22 +19,26 @@ import argparse
 from models import *
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-parser.add_argument('optimizer', default='SGD', type=str, action='store_const', 
+
+
+parser.add_argument('problem', default='2', action='store_const', 
+                    help='which question on the HW to run')
+parser.add_argument('optimizer', default='SGD', action='store_const', 
                     help='optimizer')
-parser.add_argument('dataloader_workers', default=4, type=int, action='store_const',
+parser.add_argument('dataloader_workers', default=4,  action='store_const',
                     help='dataloader workers')
-parser.add_argument('epochs', default=5, type=int, action='store_const',
+parser.add_argument('epochs', default=5, action='store_const',
                     help='epochs')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate', dest=lr)
+parser.add_argument('--lr', default=0.1, help='learning rate', action='store_const')
 parser.add_argument('--data_path', default='./data', type=str, action='store_const',
                     help='data path')
-parser.add_argument('--cuda', default=False, type=str, action='store_true',
+parser.add_argument('--cuda', default=False, action='store_true',
                     help='cuda usage')
 
 parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 args = parser.parse_args()
-ops = ['SGD', 'Adam', 'RMSprop', 'Adagrad', 'Adadelta', 'Adamax', 'Nadam']
+ops = ['SGD', 'Adam', 'RMSprop', 'Adagrad', 'Adadelta', 'Adamax']
 assert(args.optimizer in ops),f'Invalid optimizer...\n Must be in {ops}'
 device = 'cuda' if (torch.cuda.is_available() and args.cuda) else 'cpu'
 best_acc = 0  # best test accuracy
