@@ -18,9 +18,9 @@ import argparse
 
 from models import *
 
+EXERCISES = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "Q3"]
 
 def main():
-    EXERCISES = ["C1", "C2", "C3", "C4", "C5", "C6", "C7"]
     parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 
     parser.add_argument("exercise", default="C1", help="problem # on HW")
