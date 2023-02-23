@@ -16,6 +16,8 @@ conda init bash
 
 source ~/.bashrc
 
+rm -rf ~/pytorch-cifar-benchmarking/data
+
 conda activate hw2
 
-python3 lab2.py C2 --cuda True 
+python3 lab2.py C3 --cuda False  
