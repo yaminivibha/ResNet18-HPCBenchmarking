@@ -20,6 +20,7 @@ from models import *
 
 EXERCISES = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "Q3"]
 
+
 def main():
     parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 
@@ -32,10 +33,15 @@ def main():
     parser.add_argument(
         "--data_path", default="./data", help="data dirpath; default ./data"
     )
-    parser.add_argument("--lr", default=0.1, type=float, help="learning rate, default 0.1")
+    parser.add_argument(
+        "--lr", default=0.1, type=float, help="learning rate, default 0.1"
+    )
     parser.add_argument("--cuda", default=False, help="cuda usage; default False")
     parser.add_argument(
-        "--resume", "-r", action="store_true", default=False,
+        "--resume",
+        "-r",
+        action="store_true",
+        default=False,
         help="resume from checkpoint; default False",
     )
 
@@ -121,7 +127,6 @@ def main():
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
-
     # Training
     def train(epoch):
         print("\nEpoch: %d" % epoch)
@@ -142,13 +147,17 @@ def main():
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            # progress_bar(
-            #     batch_idx,
-            #     len(trainloader),
-            #     "Train Loss: %.3f | Acc: %.3f%% (%d/%d)"
-            #     % (train_loss / (batch_idx + 1), 100.0 * correct / total, correct, total),
-            # )
-
+            progress_bar(
+                batch_idx,
+                len(trainloader),
+                "Train Loss: %.3f | Acc: %.3f%% (%d/%d)"
+                % (
+                    train_loss / (batch_idx + 1),
+                    100.0 * correct / total,
+                    correct,
+                    total,
+                ),
+            )
 
     def test(epoch):
         global best_acc
@@ -167,17 +176,17 @@ def main():
                 total += targets.size(0)
                 correct += predicted.eq(targets).sum().item()
 
-                # progress_bar(
-                #     batch_idx,
-                #     len(testloader),
-                #     "Test Loss: %.3f | Acc: %.3f%% (%d/%d)"
-                #     % (
-                #         test_loss / (batch_idx + 1),
-                #         100.0 * correct / total,
-                #         correct,
-                #         total,
-                #     ),
-                # )
+                progress_bar(
+                    batch_idx,
+                    len(testloader),
+                    "Test Loss: %.3f | Acc: %.3f%% (%d/%d)"
+                    % (
+                        test_loss / (batch_idx + 1),
+                        100.0 * correct / total,
+                        correct,
+                        total,
+                    ),
+                )
 
         # Save checkpoint.
         acc = 100.0 * correct / total
@@ -192,7 +201,6 @@ def main():
                 os.mkdir("checkpoint")
             torch.save(state, "./checkpoint/ckpt.pth")
             best_acc = acc
-
 
     ###C2###
 
@@ -226,14 +234,18 @@ def main():
             file=outfile,
         )
         print(
-            "Average test time per epoch: ", sum(test_times) / len(test_times), file=outfile
+            "Average test time per epoch: ",
+            sum(test_times) / len(test_times),
+            file=outfile,
         )
         print(
-            "Average total time epoch: ", sum(total_times) / len(total_times), file=outfile
+            "Average total time epoch: ",
+            sum(total_times) / len(total_times),
+            file=outfile,
         )
         print(f"Total time for {args.epochs} epochs: ", sum(total_times), file=outfile)
         outfile.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

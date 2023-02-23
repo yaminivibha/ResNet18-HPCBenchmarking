@@ -12,7 +12,9 @@ import math
 import torch.nn as nn
 import torch.nn.init as init
 from torch.optim import SGD, Adam, RMSprop, Adagrad, Adadelta, Adamax
+
 OPTIMIZERS = ["SGD", "Adam", "RMSprop", "Adagrad", "Adadelta", "Adamax"]
+
 
 def print_config(args, device):
     """Print config."""
@@ -24,6 +26,7 @@ def print_config(args, device):
     print(f"Learning Rate:          {args.lr}")
     print(f"Device:                 {device}")
     print(f"Resume:                 {args.resume}")
+
 
 def set_optimizer(args):
     """Set optimizer."""
@@ -43,6 +46,7 @@ def set_optimizer(args):
         raise ValueError(f"Invalid optimizer \n Must be in {OPTIMIZERS}")
     args.__setattr__("optimizer_function", optimizer)
     return args
+
 
 def get_mean_and_std(dataset):
     """Compute the mean and std value of dataset."""
@@ -77,56 +81,55 @@ def init_params(net):
                 init.constant(m.bias, 0)
 
 
-# _, term_width = os.popen("stty size", "r").read().split()
-# term_width = int(term_width)
+term_width = 80
 
-# TOTAL_BAR_LENGTH = 65.0
-# last_time = time.time()
-# begin_time = last_time
+TOTAL_BAR_LENGTH = 65.0
+last_time = time.time()
+begin_time = last_time
 
 
-# def progress_bar(current, total, msg=None):
-#     global last_time, begin_time
-#     if current == 0:
-#         begin_time = time.time()  # Reset for new bar.
+def progress_bar(current, total, msg=None):
+    global last_time, begin_time
+    if current == 0:
+        begin_time = time.time()  # Reset for new bar.
 
-#     cur_len = int(TOTAL_BAR_LENGTH * current / total)
-#     rest_len = int(TOTAL_BAR_LENGTH - cur_len) - 1
+    cur_len = int(TOTAL_BAR_LENGTH * current / total)
+    rest_len = int(TOTAL_BAR_LENGTH - cur_len) - 1
 
-#     sys.stdout.write(" [")
-#     for i in range(cur_len):
-#         sys.stdout.write("=")
-#     sys.stdout.write(">")
-#     for i in range(rest_len):
-#         sys.stdout.write(".")
-#     sys.stdout.write("]")
+    sys.stdout.write(" [")
+    for i in range(cur_len):
+        sys.stdout.write("=")
+    sys.stdout.write(">")
+    for i in range(rest_len):
+        sys.stdout.write(".")
+    sys.stdout.write("]")
 
-#     cur_time = time.time()
-#     step_time = cur_time - last_time
-#     last_time = cur_time
-#     tot_time = cur_time - begin_time
+    cur_time = time.time()
+    step_time = cur_time - last_time
+    last_time = cur_time
+    tot_time = cur_time - begin_time
 
-#     L = []
-#     L.append("  Step: %s" % format_time(step_time))
-#     L.append(" | Tot: %s" % format_time(tot_time))
-#     if msg:
-#         L.append(" | " + msg)
+    L = []
+    L.append("  Step: %s" % format_time(step_time))
+    L.append(" | Tot: %s" % format_time(tot_time))
+    if msg:
+        L.append(" | " + msg)
 
-#     msg = "".join(L)
-#     sys.stdout.write(msg)
-#     for i in range(term_width - int(TOTAL_BAR_LENGTH) - len(msg) - 3):
-#         sys.stdout.write(" ")
+    msg = "".join(L)
+    sys.stdout.write(msg)
+    for i in range(term_width - int(TOTAL_BAR_LENGTH) - len(msg) - 3):
+        sys.stdout.write(" ")
 
-#     # Go back to the center of the bar.
-#     for i in range(term_width - int(TOTAL_BAR_LENGTH / 2) + 2):
-#         sys.stdout.write("\b")
-#     sys.stdout.write(" %d/%d " % (current + 1, total))
+    # Go back to the center of the bar.
+    for i in range(term_width - int(TOTAL_BAR_LENGTH / 2) + 2):
+        sys.stdout.write("\b")
+    sys.stdout.write(" %d/%d " % (current + 1, total))
 
-#     if current < total - 1:
-#         sys.stdout.write("\r")
-#     else:
-#         sys.stdout.write("\n")
-#     sys.stdout.flush()
+    if current < total - 1:
+        sys.stdout.write("\r")
+    else:
+        sys.stdout.write("\n")
+    sys.stdout.flush()
 
 
 def format_time(seconds):
