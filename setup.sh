@@ -8,10 +8,12 @@
 #SBATCH -t 0-00:30                 # Runtime in D-HH:MM
 #SBATCH --mem-per-cpu=10gb        # The memory the job will use per cpu core
 
-
 module load anaconda
+
+conda init bash
+
+source ~/.bashrc
 
 conda activate hw2
 
-python3 hw2.py C2 
-
+python3 lab2.py C2

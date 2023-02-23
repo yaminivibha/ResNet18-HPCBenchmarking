@@ -10,7 +10,7 @@ import torch.backends.cudnn as cudnn
 import torchvision
 import torchvision.transforms as transforms
 from prettytable import PrettyTable
-from utils import progress_bar, print_config, set_optimizer
+from utils import print_config, set_optimizer
 
 import time
 import os
@@ -142,12 +142,12 @@ def main():
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(
-                batch_idx,
-                len(trainloader),
-                "Train Loss: %.3f | Acc: %.3f%% (%d/%d)"
-                % (train_loss / (batch_idx + 1), 100.0 * correct / total, correct, total),
-            )
+            # progress_bar(
+            #     batch_idx,
+            #     len(trainloader),
+            #     "Train Loss: %.3f | Acc: %.3f%% (%d/%d)"
+            #     % (train_loss / (batch_idx + 1), 100.0 * correct / total, correct, total),
+            # )
 
 
     def test(epoch):
@@ -167,17 +167,17 @@ def main():
                 total += targets.size(0)
                 correct += predicted.eq(targets).sum().item()
 
-                progress_bar(
-                    batch_idx,
-                    len(testloader),
-                    "Test Loss: %.3f | Acc: %.3f%% (%d/%d)"
-                    % (
-                        test_loss / (batch_idx + 1),
-                        100.0 * correct / total,
-                        correct,
-                        total,
-                    ),
-                )
+                # progress_bar(
+                #     batch_idx,
+                #     len(testloader),
+                #     "Test Loss: %.3f | Acc: %.3f%% (%d/%d)"
+                #     % (
+                #         test_loss / (batch_idx + 1),
+                #         100.0 * correct / total,
+                #         correct,
+                #         total,
+                #     ),
+                # )
 
         # Save checkpoint.
         acc = 100.0 * correct / total
