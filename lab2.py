@@ -10,7 +10,7 @@ import torch.backends.cudnn as cudnn
 import torchvision
 import torchvision.transforms as transforms
 from prettytable import PrettyTable
-from utils import print_config, set_optimizer
+from utils import print_config, set_optimizer, progress_bar
 
 import time
 import os
@@ -36,7 +36,8 @@ def main():
     parser.add_argument(
         "--lr", default=0.1, type=float, help="learning rate, default 0.1"
     )
-    parser.add_argument("--cuda", default=False, help="cuda usage; default False")
+    parser.add_argument("--outfilename", default='output.txt', help="filename for writing results")
+    parser.add_argument("--cuda", default=True, help="cuda usage; default False")
     parser.add_argument(
         "--resume",
         "-r",
