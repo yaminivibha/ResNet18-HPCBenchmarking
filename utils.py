@@ -4,20 +4,22 @@
     - progress_bar: progress bar mimic xlua.progress.
 # Code Attribution: https://github.com/kuangliu/pytorch-cifar
 """
+import math
 import os
 import sys
 import time
-import math
-import torchvision.transforms as transforms
+
 import torch
-import torchvision
 import torch.nn as nn
 import torch.nn.init as init
-from torch.optim import SGD, Adam, RMSprop, Adagrad, Adadelta, Adamax
+import torchvision
+import torchvision.transforms as transforms
+from torch.optim import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop
 
 OPTIMIZERS = ["SGD", "Adam", "RMSprop", "Adagrad", "Adadelta", "Adamax"]
 
-def print_config(args, device):
+
+def print_config(args):
     """Print config."""
     print(f"Exercise:               {args.exercise}")
     print(f"Epochs:                 {args.epochs}")
@@ -25,7 +27,7 @@ def print_config(args, device):
     print(f"Num Dataloader Workers: {args.dataloader_workers}")
     print(f"Data Path:              {args.data_path}")
     print(f"Learning Rate:          {args.lr}")
-    print(f"Device:                 {device}")
+    print(f"Device:                 {args.device}")
     # print(f"Resume:                 {args.resume}")
 
 
@@ -45,8 +47,8 @@ def set_optimizer(args):
         optimizer = Adamax
     else:
         raise ValueError(f"Invalid optimizer \n Must be in {OPTIMIZERS}")
-    args.__setattr__("optimizer_function", optimizer)
-    return args
+    return optimizer
+
 
 def load_data(args):
     transform_train = transforms.Compose(

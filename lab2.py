@@ -1,26 +1,37 @@
 """Train CIFAR10 with PyTorch."""
 # Code Attribution: https://github.com/kuangliu/pytorch-cifar
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.optim import SGD, Adam, RMSprop, Adagrad, Adadelta, Adamax
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
-from torch.utils.benchmark import Timer
+import argparse
+import os
+import time
 
+import torch
+import torch.backends.cudnn as cudnn
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from prettytable import PrettyTable
-from utils import print_config, set_optimizer, progress_bar, load_data
-
-import time
-import os
-import argparse
+from torch.optim import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop
+from torch.utils.benchmark import Timer
 
 from models import *
+from utils import load_data, print_config, progress_bar, set_optimizer
 
 EXERCISES = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "Q3"]
-classes = ("plane","car","bird","cat","deer","dog","frog","horse","ship","truck",)
+classes = (
+    "plane",
+    "car",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck",
+)
+
 
 def main():
     parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
@@ -37,7 +48,9 @@ def main():
     parser.add_argument(
         "--lr", default=0.1, type=float, help="learning rate, default 0.1"
     )
-    parser.add_argument("--outfilename", default='output.txt', help="filename for writing results")
+    parser.add_argument(
+        "--outfilename", default="output.txt", help="filename for writing results"
+    )
     parser.add_argument("--cuda", default=True, help="cuda usage; default False")
     # parser.add_argument(
     #     "--resume",
@@ -49,14 +62,12 @@ def main():
 
     args = parser.parse_args()
 
+    print("==> Setting configs..")
     if args.exercise not in EXERCISES:
         raise ValueError(f"Invalid exercise \n Must be in {EXERCISES}")
-    device = "cuda" if (torch.cuda.is_available() and args.cuda) else "cpu"
-    args.__setattr__("device", device)
-    args = set_optimizer(args)
-    print("==> Setting configs..")
-
-    print_config(args, device)
+    args.device = "cuda" if (torch.cuda.is_available() and args.cuda) else "cpu"
+    args.optimizer = set_optimizer(args)
+    print_config(args)
 
     # best_acc = 0  # best test accuracy
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
@@ -69,7 +80,7 @@ def main():
     print("==> Building model..")
     net = ResNet18()
     net = net.to(device)
-    if device == "cuda":
+    if args.device == "cuda":
         net = torch.nn.DataParallel(net)
         cudnn.benchmark = True
 
@@ -95,7 +106,11 @@ def main():
         train_loss = 0
         correct = 0
         total = 0
+
+        c2_load_time = 0
+        c2_start = time.time()
         for batch_idx, (inputs, targets) in enumerate(trainloader):
+            c2_load_time += time.time() - c2_start
             inputs, targets = inputs.to(device), targets.to(device)
             optimizer.zero_grad()
             outputs = net(inputs)
@@ -119,6 +134,8 @@ def main():
                     total,
                 ),
             )
+            c2_start = time.time()
+        return c2_load_time
 
     def test(epoch):
         # global best_acc
@@ -127,7 +144,10 @@ def main():
         correct = 0
         total = 0
         with torch.no_grad():
+            c2_load_time = 0
+            c2_start = time.time()
             for batch_idx, (inputs, targets) in enumerate(testloader):
+                c2_load_time += time.time() - c2_start
                 inputs, targets = inputs.to(device), targets.to(device)
                 outputs = net(inputs)
                 loss = criterion(outputs, targets)
@@ -148,7 +168,7 @@ def main():
                         total,
                     ),
                 )
-
+                c2_start = time.time()
         # Save checkpoint.
         # acc = 100.0 * correct / total
         # if acc > best_acc:
@@ -162,6 +182,7 @@ def main():
         #         os.mkdir("checkpoint")
         #     torch.save(state, "./checkpoint/ckpt.pth")
         #     best_acc = acc
+        return c2_load_time
 
     ###C2: Time Measurement###
 
@@ -170,63 +191,71 @@ def main():
         train_times = []
         test_times = []
         total_times = []
-
+        load_times = []
         for epoch in range(args.epochs):
             start = time.perf_counter()
-            train(epoch)
+            load_time_train = train(epoch)
             train_time = time.perf_counter()
-            test(epoch)
+            load_time_test = test(epoch)
             test_time = time.perf_counter()
 
             train_times.append(train_time - start)
             test_times.append(test_time - train_time)
             total_times.append(test_time - start)
+            load_times.append(load_time_train + load_time_test)
             scheduler.step()
 
         table = PrettyTable([])
         table.add_column("epoch", range(args.epochs))
-        table.add_column("train_time", train_times)
-        table.add_column("test_time", test_times)
-
+        table.add_column("load time (for train + test)", load_times)
+        table.add_column("train time", train_times)
+        table.add_column("total_time", total_times)
         print(table, file=outfile)
         print(
-            "Average train time per epoch: ",
-            sum(train_times) / len(train_times),
+            f"Average train time per epoch: {sum(train_times) / len(train_times)}",
             file=outfile,
         )
         print(
-            "Average test time per epoch: ",
-            sum(test_times) / len(test_times),
+            f"Average loading time per epoch: {sum(load_times) / len(test_times)}",
             file=outfile,
         )
         print(
-            "Average total time epoch: ",
-            sum(total_times) / len(total_times),
+            f"Average total time per epoch: {sum(total_times) / len(total_times)}",
             file=outfile,
         )
         print(f"Total time for {args.epochs} epochs: ", sum(total_times), file=outfile)
         outfile.close()
 
-
     ###C3: I/O Optimization ###
-    if args.exercise=="C3":
+    if args.exercise == "C3":
         outfile = open("C3.txt", "w")
         print("C3: I/O Optimization", file=outfile)
-        
-        num_workers = [0,4,8,12,16,20]
+
+        num_workers = [0, 4, 8, 12]
         io_times = []
 
         for workers in num_workers:
             print(f"Number of workers: {workers}\n\n\n", file=outfile)
-            args.__setattr__("num_workers", workers)
+            args.num_workers = workers
             print("==> Preparing data..")
             trainloader, trainset, testloader, testset = load_data(args)
-            for epoch in range(start_epoch, start_epoch+200):
-                start = time.perf_counter()
-                train(epoch)
-                test(epoch)
-                end = time.perf_counter()
+            runtime = 0
+            for epoch in range(start_epoch, start_epoch + 200):
+                load_time_train = train(epoch)
+                load_time_test = test(epoch)
                 scheduler.step()
+                runtime += load_time_train + load_time_test
+                print(f"Epoch {epoch} total loadtime: {runtime}", file=outfile)
+            io_times.append(runtime)
+            print(f"Num_workers {workers}- Total load time: {runtime}", file=outfile)
+
+        table = PrettyTable([])
+        table.add_column("num_workers", num_workers)
+        table.add_column("io_times", io_times)
+        print(table, file=outfile)
+
+        outfile.close()
+
 
 if __name__ == "__main__":
     main()
