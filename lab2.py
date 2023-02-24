@@ -206,10 +206,10 @@ def main():
             scheduler.step()
 
         table = PrettyTable([])
-        table.add_column("epoch", range(args.epochs))
-        table.add_column("load time (for train + test)", load_times)
-        table.add_column("train time", train_times)
-        table.add_column("total_time", total_times)
+        table.add_column("epoch", range(1, args.epochs+1))
+        table.add_column("data load time for train + test (secs)", load_times)
+        table.add_column("train time (secs)", train_times)
+        table.add_column("total time (secs)", total_times)
         print(table, file=outfile)
         print(
             f"Average train time per epoch: {sum(train_times) / len(train_times)}",
@@ -251,7 +251,7 @@ def main():
 
         table = PrettyTable([])
         table.add_column("num_workers", num_workers)
-        table.add_column("io_times", io_times)
+        table.add_column("io_times (secs)", io_times)
         print(table, file=outfile)
 
         outfile.close()
