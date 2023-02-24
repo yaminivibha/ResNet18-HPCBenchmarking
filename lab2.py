@@ -206,7 +206,7 @@ def main():
             scheduler.step()
 
         table = PrettyTable([])
-        table.add_column("epoch", range(1, args.epochs+1))
+        table.add_column("epoch", range(1, args.epochs + 1))
         table.add_column("data load time for train + test (secs)", load_times)
         table.add_column("train time (secs)", train_times)
         table.add_column("total time (secs)", total_times)
@@ -229,29 +229,128 @@ def main():
     ###C3: I/O Optimization ###
     if args.exercise == "C3":
         outfile = open("C3.txt", "w")
-        print("C3: I/O Optimization", file=outfile)
+        print("#### C3: I/O Optimization ####", file=outfile)
 
         num_workers = [0, 4, 8, 12]
         io_times = []
-
+        compute_times = []
         for workers in num_workers:
-            print(f"Number of workers: {workers}\n\n\n", file=outfile)
+            print(f"#### NUM_WORKERS {workers} ####\n\n", file=outfile)
             args.num_workers = workers
             print("==> Preparing data..")
             trainloader, trainset, testloader, testset = load_data(args)
-            runtime = 0
+            total_loadtime = 0
+            total_runtime = 0
             for epoch in range(start_epoch, start_epoch + 200):
+                start_time = time.time()
                 load_time_train = train(epoch)
+                train_time = time.time()
                 load_time_test = test(epoch)
+                train_time = time.time()
                 scheduler.step()
-                runtime += load_time_train + load_time_test
-                print(f"Epoch {epoch} total loadtime: {runtime}", file=outfile)
-            io_times.append(runtime)
-            print(f"Num_workers {workers}- Total load time: {runtime}", file=outfile)
 
+                total_loadtime += load_time_train + load_time_test
+
+                print(f"Epoch {epoch}:", file=outfile)
+                print(
+                    f"    Load time: {load_time_train + load_time_test}", file=outfile
+                )
+                print(f"    Total time: {train_time - start_time}", file=outfile)
+
+            print(f"#### NUM_WORKERS {workers} 5 EPOCH SUMMARY ####\n\n", file=outfile)
+            print(f"    Total load time: {total_loadtime}", file=outfile)
+            print(f"    Total compute time: {total_runtime}", file=outfile)
+            io_times.append(total_loadtime)
+            compute_times.append(total_runtime)
+
+        print("#### C3 Summary ####\n\n", file=outfile)
         table = PrettyTable([])
         table.add_column("num_workers", num_workers)
-        table.add_column("io_times (secs)", io_times)
+        table.add_column("data loading time (secs)", io_times)
+        table.add_column("total computation time (secs)", compute_times)
+        print(table, file=outfile)
+        outfile.close()
+
+    ###C4: Profiling Starting from C3###
+    if args.exercise == "C4":
+        print(f"#### C4: Profiling Starting From C3 ####\n\n")
+        num_workers = [1, 4]
+        for workers in num_workers:
+            args.num_workers = workers
+            trainloader, trainset, testloader, testset = load_data(args)
+            total_loadtime = 0
+            total_computetime = 0
+            for epoch in range(start_epoch, start_epoch + 200):
+                start_time = time.time()
+                load_time_train = train(epoch)
+                train_time = time.time()
+                load_time_test = test(epoch)
+                train_time = time.time()
+                scheduler.step()
+                total_loadtime += load_time_train + load_time_test
+                total_computetime += train_time - start_time
+                print(f"Epoch {epoch} ", file=outfile)
+                print(
+                    f"    Total Load Time {load_time_test + load_time_train}\n",
+                    file=outfile,
+                )
+                print(f"    Train Time {train_time - start_time}\n", file=outfile)
+                print(f"    Total Time {train_time - start_time}\n", file=outfile)
+            io_times.append(total_loadtime)
+            print(f"#### NUM_WORKERS {workers} SUMMARY ####\n\n", file=outfile)
+            print(f"Total load time: {total_loadtime}", file=outfile)
+            print(f"Total compute time: {total_computetime}", file=outfile)
+
+        print("#### C4 Summary ####\n\n", file=outfile)
+        table = PrettyTable([])
+        table.add_column("No. Workers", num_workers)
+        table.add_column("Data Loading Time (secs)", io_times)
+        print(table, file=outfile)
+
+        outfile.close()
+
+    ###C5: Training GPU ###
+    if args.exercise == "C5":
+        outfile = open("C5.txt", "w")
+        print("#### C5: Training GPU ####", file=outfile)
+
+        args.dataloader_workers = 4
+        args.device = "cuda"
+        print("==> Preparing data..")
+        trainloader, trainset, testloader, testset = load_data(args)
+
+        load_times = []
+        train_times = []
+        total_times = []
+        total_loadtime = 0
+
+        for epoch in range(start_epoch, start_epoch + 200):
+            start_time = time.time()
+            load_time_train = train(epoch)
+            train_time = time.time()
+            load_time_test = test(epoch)
+            train_time = time.time()
+            scheduler.step()
+            total_loadtime += load_time_train + load_time_test
+            train_times.append(train_time - start_time)
+            load_times.append(load_time_train + load_time_test)
+            total_times.append(train_time - start_time)
+            print(f"Epoch {epoch} ", file=outfile)
+            print(
+                f"    Total Load Time {load_time_test + load_time_train}\n",
+                file=outfile,
+            )
+            print(f"    Train Time {train_time - start_time}\n", file=outfile)
+            print(f"    Total Time {train_time - start_time}\n", file=outfile)
+
+        print(f"#### C5 Summary ####\n\n", file=outfile)
+        print(f"With GPU: Dataloading + Computation Time")
+        table = PrettyTable([])
+
+        table.add_column("No. Workers", [4])
+        table.add_column("Loading Time (secs)", [total_loadtime])
+        table.add_column("Training Time (secs)", [sum(train_times)])
+        table.add_column("Total Time (secs)", [sum(total_times)])
         print(table, file=outfile)
 
         outfile.close()
