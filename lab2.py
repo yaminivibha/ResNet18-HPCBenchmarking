@@ -79,7 +79,7 @@ def main():
     # Model
     print("==> Building model..")
     net = ResNet18()
-    net = net.to(device)
+    net = net.to(args.device)
     if args.device == "cuda":
         net = torch.nn.DataParallel(net)
         cudnn.benchmark = True
@@ -111,7 +111,7 @@ def main():
         c2_start = time.time()
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             c2_load_time += time.time() - c2_start
-            inputs, targets = inputs.to(device), targets.to(device)
+            inputs, targets = inputs.to(args.device), targets.to(args.device)
             optimizer.zero_grad()
             outputs = net(inputs)
             loss = criterion(outputs, targets)
@@ -148,7 +148,7 @@ def main():
             c2_start = time.time()
             for batch_idx, (inputs, targets) in enumerate(testloader):
                 c2_load_time += time.time() - c2_start
-                inputs, targets = inputs.to(device), targets.to(device)
+                inputs, targets = inputs.to(args.device), targets.to(args.device)
                 outputs = net(inputs)
                 loss = criterion(outputs, targets)
 
