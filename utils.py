@@ -28,6 +28,7 @@ def print_config(args):
     print(f"Data Path:              {args.data_path}")
     print(f"Learning Rate:          {args.lr}")
     print(f"Device:                 {args.device}")
+    print(f"Output Path:            {args.output_path}")
 
 
 def set_optimizer(args):

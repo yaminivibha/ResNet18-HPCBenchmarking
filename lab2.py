@@ -353,9 +353,12 @@ def main():
 
             average_train_losses.append(loss)
             train_times.append(train_time - start_time)
-            accuracies.append(test(epoch)["accuracy"])
+            accuracy = test(epoch)["accuracy"]
+            accuracies.append(accuracy)
+
             print(f"Epoch {epoch} ", file=outfile)
             print(f"    Train Time {train_time - start_time}\n", file=outfile)
+            print(f"    Accuracy {accuracy}\n", file=outfile)
 
         print(
             f"#### C6 Summary For Optimizer {args.optimizer_name} ####\n\n",
@@ -363,7 +366,7 @@ def main():
         )
         table = PrettyTable([])
         table.add_column("Epoch", [i + 1 for i in range(args.epochs)])
-        table.add_column("Training Time (secs)",train_times)
+        table.add_column("Training Time (secs)", train_times)
         table.add_column("Accuracy", accuracies)
         table.add_column("Average Train Loss", average_train_losses)
         print(table, file=outfile)
@@ -393,7 +396,6 @@ def main():
             accuracies.append(test(epoch)["accuracy"])
             print(f"Epoch {epoch} ", file=outfile)
             print(f"    Train Time {train_time - start_time}\n", file=outfile)
-
 
         print(f"#### C7 Summary ####\n\n", file=outfile)
         table = PrettyTable([])
