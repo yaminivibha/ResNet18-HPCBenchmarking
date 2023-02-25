@@ -348,7 +348,7 @@ def main():
         average_train_losses = []
         for epoch in range(args.epochs):
             start_time = time.time()
-            loss = train(epoch)["train_loss"]
+            loss = train(epoch)["ave_train_loss"]
             train_time = time.time()
             scheduler.step()
 
@@ -385,7 +385,7 @@ def main():
 
         for epoch in range(args.epochs):
             start_time = time.time()
-            loss = train(epoch)["average_train_loss"]
+            loss = train(epoch)["ave_train_loss"]
             train_time = time.time()
             scheduler.step()
 
