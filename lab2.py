@@ -333,12 +333,11 @@ def main():
 
         outfile.close()
 
-    ####C6: Experimenting with different optimizers ####
+    #### C6: Experimenting with different optimizers ####
     if args.exercise == "C6":
         print(
             f"======== C6: Optimizer {args.optimizer_name} ========\n\n", file=outfile
         )
-        outfile = open(args.outfile, "a")
         args.dataloader_workers = 4
         args.device = "cuda"
         print("==> Preparing data..")
@@ -371,7 +370,7 @@ def main():
         print(table, file=outfile)
         outfile.close()
 
-    ####C7: Experimenting with Batch Norm ####
+    #### C7: Experimenting with Batch Norm ####
     if args.exercise == "C7":
         print(f"======== C7: Batch Norm ========\n\n", file=outfile)
 
@@ -419,7 +418,7 @@ def main():
                 table.add_row([name, params])
                 total_params += params
             print(table)
-            print(f"Total Trainable Params: {total_params}")
+            print(f"Total Trainable Params: {total_params}", file=outfile)
 
         count_parameters(net)
         return
