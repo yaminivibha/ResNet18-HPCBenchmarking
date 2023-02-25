@@ -20,6 +20,7 @@ from utils import load_data, print_config, progress_bar, set_optimizer
 
 global outfile
 EXERCISES = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "Q3"]
+
 classes = (
     "plane",
     "car",
@@ -49,26 +50,23 @@ def main():
     parser.add_argument(
         "--lr", default=0.1, type=float, help="learning rate, default 0.1"
     )
-    parser.add_argument(
-        "--outfilename", default="output.txt", help="filename for writing results"
-    )
     parser.add_argument("--cuda", default=True, help="cuda usage; default False")
-
     args = parser.parse_args()
 
+    # Config
     print("==> Setting configs..")
     if args.exercise not in EXERCISES:
         raise ValueError("Invalid exercise")
     args.device = "cuda" if (torch.cuda.is_available() and args.cuda) else "cpu"
     args.optimizer = set_optimizer(args)
     print_config(args)
-    filename = args.exercise +".txt"
-    outfile = open(filename, "w")
+    outfile = open(args.exercise + ".txt", "w")
+
     # Data
     print("==> Preparing data..")
     trainloader, trainset, testloader, testset = load_data(args)
 
-    # Model
+    # Model Setup
     print("==> Building model..")
     net = ResNet18()
     net = net.to(args.device)
@@ -84,6 +82,13 @@ def main():
 
     # Training
     def train(epoch):
+        """
+        Executes one epoch of training.
+        Args:
+            epoch (int): the current epoch
+        Returns:
+            c2_load_time (float): the time spent loading data
+        """
         print("\nEpoch: %d" % epoch)
         net.train()
         train_loss = 0
@@ -121,7 +126,13 @@ def main():
         return c2_load_time
 
     def test(epoch):
-        # global best_acc
+        """
+        Tests the model on the test set.
+        Args:
+            epoch (int): the current epoch
+        Returns:
+            c2_load_time (float): the time spent loading data
+        """
         net.eval()
         test_loss = 0
         correct = 0
@@ -183,7 +194,6 @@ def main():
         outfile.append(table)
         outfile.append(
             f"Average train time per epoch: {sum(train_times) / len(train_times)}",
-            
         )
         outfile.append(
             f"Average loading time per epoch: {sum(load_times) / len(test_times)}"
@@ -191,7 +201,7 @@ def main():
         outfile.append(
             f"Average total time per epoch: {sum(total_times) / len(total_times)}"
         )
-        outfile.append(f"Total time for {args.epochs} epochs: {sum(total_times)}" )
+        outfile.append(f"Total time for {args.epochs} epochs: {sum(total_times)}")
         outfile.close()
 
     ###C3: I/O Optimization ###
@@ -277,9 +287,8 @@ def main():
 
         outfile.close()
 
-    ###C5: Training GPU ###
+    ####C5: Training GPU ####
     if args.exercise == "C5":
-        
         print("======== C5: Training GPU ========\n\n", file=outfile)
 
         args.dataloader_workers = 4
