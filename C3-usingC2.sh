@@ -17,7 +17,7 @@ source ~/.bashrc
 
 conda activate hw2
 
-python3 lab2.py C2 --num_workers 0 --outfile C3-1worker.txt
-python3 lab2.py C2 --num_workers 4 --outfile C3-2workers.txt
-python3 lab2.py C2 --num_workers 8 --outfile C3-2workers.txt
-python3 lab2.py C2 --num_workers 12 --outfile C3-2workers.txt
+python3 lab2.py C2 --dataloader_workers 0 --outfile C3-1worker.txt
+python3 lab2.py C2 --dataloader_workers 4 --outfile C3-2workers.txt
+python3 lab2.py C2 --dataloader_workers 8 --outfile C3-2workers.txt
+python3 lab2.py C2 --dataloader_workers 12 --outfile C3-2workers.txt

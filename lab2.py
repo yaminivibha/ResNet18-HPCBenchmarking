@@ -35,7 +35,10 @@ def main():
     parser.add_argument("--epochs", default=5, type=int, help="num epochs; default 5")
     parser.add_argument("--optimizer", default="SGD", help="optimizer, default SGD")
     parser.add_argument(
-        "--dataloader_workers", default=4, help="dataloader workers; default 4"
+        "--dataloader_workers",
+        type=int,
+        default=4,
+        help="dataloader workers; default 4",
     )
     parser.add_argument(
         "--data_path", default="./data", help="data dirpath; default ./data"
@@ -56,7 +59,7 @@ def main():
     args.optimizer = set_optimizer(args)
     args.filename = args.outfile if args.outfile else args.exercise + ".txt"
     print_config(args)
-    outfile = open(filename, "a")
+    outfile = open(args.filename, "a")
 
     # Data
     print("==> Preparing data..")
