@@ -18,6 +18,7 @@ from torch.utils.benchmark import Timer
 from models import *
 from utils import load_data, print_config, progress_bar, set_optimizer
 
+global outfile
 EXERCISES = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "Q3"]
 classes = (
     "plane",
@@ -52,26 +53,17 @@ def main():
         "--outfilename", default="output.txt", help="filename for writing results"
     )
     parser.add_argument("--cuda", default=True, help="cuda usage; default False")
-    # parser.add_argument(
-    #     "--resume",
-    #     "-r",
-    #     action="store_true",
-    #     default=False,
-    #     help="resume from checkpoint; default False",
-    # )
 
     args = parser.parse_args()
 
     print("==> Setting configs..")
     if args.exercise not in EXERCISES:
-        raise ValueError(f"Invalid exercise \n Must be in {EXERCISES}")
+        raise ValueError("Invalid exercise")
     args.device = "cuda" if (torch.cuda.is_available() and args.cuda) else "cpu"
     args.optimizer = set_optimizer(args)
     print_config(args)
-
-    # best_acc = 0  # best test accuracy
-    start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-
+    filename = args.exercise +".txt"
+    outfile = open(filename, "w")
     # Data
     print("==> Preparing data..")
     trainloader, trainset, testloader, testset = load_data(args)
@@ -83,15 +75,6 @@ def main():
     if args.device == "cuda":
         net = torch.nn.DataParallel(net)
         cudnn.benchmark = True
-
-    # if args.resume:
-    #     # Load checkpoint.
-    #     print("==> Resuming from checkpoint..")
-    #     assert os.path.isdir("checkpoint"), "Error: no checkpoint directory found!"
-    #     checkpoint = torch.load("./checkpoint/ckpt.pth")
-    #     net.load_state_dict(checkpoint["net"])
-    #     best_acc = checkpoint["acc"]
-    #     start_epoch = checkpoint["epoch"]
 
     criterion = nn.CrossEntropyLoss()
     optimizer = args.optimizer(
@@ -169,25 +152,12 @@ def main():
                     ),
                 )
                 c2_start = time.time()
-        # Save checkpoint.
-        # acc = 100.0 * correct / total
-        # if acc > best_acc:
-        #     print("Saving..")
-        #     state = {
-        #         "net": net.state_dict(),
-        #         "acc": acc,
-        #         "epoch": epoch,
-        #     }
-        #     if not os.path.isdir("checkpoint"):
-        #         os.mkdir("checkpoint")
-        #     torch.save(state, "./checkpoint/ckpt.pth")
-        #     best_acc = acc
         return c2_load_time
 
     ###C2: Time Measurement###
 
     if args.exercise == "C2":
-        outfile = open("C2.txt", "w")
+        print("======== C2: Time Measurement of Code ========\n\n", file=outfile)
         train_times = []
         test_times = []
         total_times = []
@@ -210,26 +180,23 @@ def main():
         table.add_column("data load time for train + test (secs)", load_times)
         table.add_column("train time (secs)", train_times)
         table.add_column("total time (secs)", total_times)
-        print(table, file=outfile)
-        print(
+        outfile.append(table)
+        outfile.append(
             f"Average train time per epoch: {sum(train_times) / len(train_times)}",
-            file=outfile,
+            
         )
-        print(
-            f"Average loading time per epoch: {sum(load_times) / len(test_times)}",
-            file=outfile,
+        outfile.append(
+            f"Average loading time per epoch: {sum(load_times) / len(test_times)}"
         )
-        print(
-            f"Average total time per epoch: {sum(total_times) / len(total_times)}",
-            file=outfile,
+        outfile.append(
+            f"Average total time per epoch: {sum(total_times) / len(total_times)}"
         )
-        print(f"Total time for {args.epochs} epochs: ", sum(total_times), file=outfile)
+        outfile.append(f"Total time for {args.epochs} epochs: {sum(total_times)}" )
         outfile.close()
 
     ###C3: I/O Optimization ###
     if args.exercise == "C3":
-        outfile = open("C3.txt", "w")
-        print("#### C3: I/O Optimization ####", file=outfile)
+        print("======== C3: I/O Optimization ========\n\n", file=outfile)
 
         num_workers = [0, 4, 8, 12]
         io_times = []
@@ -241,7 +208,7 @@ def main():
             trainloader, trainset, testloader, testset = load_data(args)
             total_loadtime = 0
             total_runtime = 0
-            for epoch in range(start_epoch, start_epoch + 200):
+            for epoch in range(args.epochs):
                 start_time = time.time()
                 load_time_train = train(epoch)
                 train_time = time.time()
@@ -251,7 +218,7 @@ def main():
 
                 total_loadtime += load_time_train + load_time_test
 
-                print(f"Epoch {epoch}:", file=outfile)
+                print(f"Epoch {epoch}:")
                 print(
                     f"    Load time: {load_time_train + load_time_test}", file=outfile
                 )
@@ -273,14 +240,15 @@ def main():
 
     ###C4: Profiling Starting from C3###
     if args.exercise == "C4":
-        print(f"#### C4: Profiling Starting From C3 ####\n\n")
+        print("======== C4: Profiling Starting from C3 ========\n\n", file=outfile)
+
         num_workers = [1, 4]
         for workers in num_workers:
             args.num_workers = workers
             trainloader, trainset, testloader, testset = load_data(args)
             total_loadtime = 0
             total_computetime = 0
-            for epoch in range(start_epoch, start_epoch + 200):
+            for epoch in range(args.epochs):
                 start_time = time.time()
                 load_time_train = train(epoch)
                 train_time = time.time()
@@ -311,8 +279,8 @@ def main():
 
     ###C5: Training GPU ###
     if args.exercise == "C5":
-        outfile = open("C5.txt", "w")
-        print("#### C5: Training GPU ####", file=outfile)
+        
+        print("======== C5: Training GPU ========\n\n", file=outfile)
 
         args.dataloader_workers = 4
         args.device = "cuda"
@@ -324,7 +292,7 @@ def main():
         total_times = []
         total_loadtime = 0
 
-        for epoch in range(start_epoch, start_epoch + 200):
+        for epoch in range(args.epochs):
             start_time = time.time()
             load_time_train = train(epoch)
             train_time = time.time()
