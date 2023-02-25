@@ -11,7 +11,6 @@ from prettytable import PrettyTable
 from models import *
 from utils import load_data, print_config, progress_bar, set_optimizer
 
-global outfile
 EXERCISES = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "Q3"]
 
 classes = (
@@ -57,7 +56,7 @@ def main():
     args.optimizer = set_optimizer(args)
     print_config(args)
     filename = args.outfile if args.outfile else args.exercise + ".txt"
-    outfile = open(filename, "w")
+    outfile = open(filename, "a")
 
     # Data
     print("==> Preparing data..")
@@ -164,7 +163,7 @@ def main():
                 )
                 c2_start = time.time()
 
-            return {"load_time": c2_load_time, "final_test_acc": 100 * correct / total}
+            return {"load_time": c2_load_time, "accuracy": 100 * correct / total}
 
     ###C2: Time Measurement###
     if args.exercise == "C2":
@@ -417,8 +416,20 @@ def main():
                 params = parameter.numel()
                 table.add_row([name, params])
                 total_params += params
-            print(table)
+            print(table, file=outfile)
             print(f"Total Trainable Params: {total_params}", file=outfile)
+
+        def count_gradients(model):
+            table = PrettyTable(["Modules", "Gradients"])
+            total_params = 0
+            for name, parameter in model.named_parameters():
+                if not parameter.requires_grad:
+                    continue
+                params = parameter.numel()
+                table.add_row([name, params])
+                total_params += params
+            print(table, file=outfile)
+            print(f"Total Gradients: {total_params}", file=outfile)
 
         count_parameters(net)
         return
