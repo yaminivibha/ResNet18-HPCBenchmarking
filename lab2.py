@@ -1,19 +1,12 @@
 """Train CIFAR10 with PyTorch."""
 # Code Attribution: https://github.com/kuangliu/pytorch-cifar
 import argparse
-import os
 import time
 
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-import torchvision
-import torchvision.transforms as transforms
 from prettytable import PrettyTable
-from torch.optim import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop
-from torch.utils.benchmark import Timer
 
 from models import *
 from utils import load_data, print_config, progress_bar, set_optimizer
@@ -50,7 +43,9 @@ def main():
     parser.add_argument(
         "--lr", default=0.1, type=float, help="learning rate, default 0.1"
     )
-    parser.add_argument("--cuda", default=True, help="cuda usage; default False")
+    parser.add_argument(
+        "--cuda", default=False, action="store_true", help="cuda usage; default False"
+    )
     args = parser.parse_args()
 
     # Config
@@ -75,16 +70,15 @@ def main():
         cudnn.benchmark = True
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = args.optimizer(
-        net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4
-    )
+    optimizer = args.optimizer(net.parameters(), **args.hyperparameters)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
     # Training
     def train(epoch):
         """
-        Executes one epoch of training.
+        Execute one epoch of training.
         Args:
+
             epoch (int): the current epoch
         Returns:
             c2_load_time (float): the time spent loading data
@@ -94,6 +88,8 @@ def main():
         train_loss = 0
         correct = 0
         total = 0
+
+        sum_train_loss = 0
 
         c2_load_time = 0
         c2_start = time.time()
@@ -122,8 +118,10 @@ def main():
                     total,
                 ),
             )
+            sum_train_loss += train_loss
             c2_start = time.time()
-        return c2_load_time
+        ave_train_loss = sum_train_loss / len(trainloader)
+        return {"load_time": c2_load_time, "ave_train_loss": ave_train_loss}
 
     def test(epoch):
         """
@@ -163,10 +161,10 @@ def main():
                     ),
                 )
                 c2_start = time.time()
-        return c2_load_time
+
+            return {"load_time": c2_load_time, "final_test_acc": 100 * correct / total}
 
     ###C2: Time Measurement###
-
     if args.exercise == "C2":
         print("======== C2: Time Measurement of Code ========\n\n", file=outfile)
         train_times = []
@@ -175,9 +173,9 @@ def main():
         load_times = []
         for epoch in range(args.epochs):
             start = time.perf_counter()
-            load_time_train = train(epoch)
+            load_time_train = train(epoch)["load_time"]
             train_time = time.perf_counter()
-            load_time_test = test(epoch)
+            load_time_test = test(epoch)["load_time"]
             test_time = time.perf_counter()
 
             train_times.append(train_time - start)
@@ -204,7 +202,7 @@ def main():
         outfile.append(f"Total time for {args.epochs} epochs: {sum(total_times)}")
         outfile.close()
 
-    ###C3: I/O Optimization ###
+    #### C3: I/O Optimization ####
     if args.exercise == "C3":
         print("======== C3: I/O Optimization ========\n\n", file=outfile)
 
@@ -220,9 +218,9 @@ def main():
             total_runtime = 0
             for epoch in range(args.epochs):
                 start_time = time.time()
-                load_time_train = train(epoch)
+                load_time_train = train(epoch)["load_time"]
                 train_time = time.time()
-                load_time_test = test(epoch)
+                load_time_test = test(epoch)["load_time"]
                 train_time = time.time()
                 scheduler.step()
 
@@ -248,7 +246,7 @@ def main():
         print(table, file=outfile)
         outfile.close()
 
-    ###C4: Profiling Starting from C3###
+    ####C4: Profiling Starting from C3####
     if args.exercise == "C4":
         print("======== C4: Profiling Starting from C3 ========\n\n", file=outfile)
 
@@ -260,9 +258,9 @@ def main():
             total_computetime = 0
             for epoch in range(args.epochs):
                 start_time = time.time()
-                load_time_train = train(epoch)
+                load_time_train = train(epoch)["load_time"]
                 train_time = time.time()
-                load_time_test = test(epoch)
+                load_time_test = test(epoch)["load_time"]
                 train_time = time.time()
                 scheduler.step()
                 total_loadtime += load_time_train + load_time_test
@@ -303,9 +301,9 @@ def main():
 
         for epoch in range(args.epochs):
             start_time = time.time()
-            load_time_train = train(epoch)
+            load_time_train = train(epoch)["load_time"]
             train_time = time.time()
-            load_time_test = test(epoch)
+            load_time_test = test(epoch)["load_time"]
             train_time = time.time()
             scheduler.step()
             total_loadtime += load_time_train + load_time_test
@@ -331,6 +329,97 @@ def main():
         print(table, file=outfile)
 
         outfile.close()
+
+    ####C6: Experimenting with different optimizers ####
+    if args.exercise == "C6":
+        print(
+            f"======== C6: Optimizer {args.optimizer_name} ========\n\n", file=outfile
+        )
+
+        args.dataloader_workers = 4
+        args.device = "cuda"
+        print("==> Preparing data..")
+        trainloader, trainset, testloader, testset = load_data(args)
+
+        train_times = []
+        accuracies = []
+        average_train_losses = []
+        for epoch in range(args.epochs):
+            start_time = time.time()
+            loss = train(epoch)["average_train_loss"]
+            train_time = time.time()
+            scheduler.step()
+
+            average_train_losses.append(loss)
+            train_times.append(train_time - start_time)
+            accuracies.append(test(epoch)["accuracy"])
+            print(f"Epoch {epoch} ", file=outfile)
+            print(f"    Train Time {train_time - start_time}\n", file=outfile)
+
+        print(
+            f"#### C6 Summary For Optimizer {args.optimizer_name} ####\n\n",
+            file=outfile,
+        )
+        table = PrettyTable([])
+        table.add_column("Epoch", [i + 1 for i in range(args.epochs)])
+        table.add_column("Training Time (secs)", [sum(train_times)])
+        table.add_column("Accuracy", [accuracies[-1]])
+        table.add_column("Average Train Loss", [average_train_losses[-1]])
+        print(table, file=outfile)
+        outfile.close()
+
+    ####C7: Experimenting with Batch Norm ####
+    if args.exercise == "C7":
+        print(f"======== C7: Batch Norm ========\n\n", file=outfile)
+
+        args.dataloader_workers = 4
+        args.device = "cuda"
+        print("==> Preparing data..")
+        trainloader, trainset, testloader, testset = load_data(args)
+
+        train_times = []
+        accuracies = []
+        average_train_losses = []
+
+        for epoch in range(args.epochs):
+            start_time = time.time()
+            loss = train(epoch)["average_train_loss"]
+            train_time = time.time()
+            scheduler.step()
+
+            average_train_losses.append(loss)
+            train_times.append(train_time - start_time)
+            accuracies.append(test(epoch)["accuracy"])
+            print(f"Epoch {epoch} ", file=outfile)
+            print(f"    Train Time {train_time - start_time}\n", file=outfile)
+
+        print(f"#### C7 Summary ####\n\n", file=outfile)
+        table = PrettyTable([])
+        table.add_column("Epoch", [i + 1 for i in range(args.epochs)])
+        table.add_column("Training Time (secs)", [sum(train_times)])
+        table.add_column("Accuracy", [accuracies[-1]])
+        table.add_column("Average Train Loss", [average_train_losses[-1]])
+        print(table, file=outfile)
+        outfile.close()
+
+    #### Q3: Num Trainable Parameters ####
+    if args.exercise == "Q3":
+        print(f"======== Q3: Num Trainable Parameters ========\n\n", file=outfile)
+
+        def count_parameters(model):
+            table = PrettyTable(["Modules", "Trainable Parameters"])
+            total_params = 0
+            for name, parameter in model.named_parameters():
+                if not parameter.requires_grad:
+                    continue
+                params = parameter.numel()
+                table.add_row([name, params])
+                total_params += params
+            print(table)
+            print(f"Total Trainable Params: {total_params}")
+
+        count_parameters(net)
+        return
 
 
 if __name__ == "__main__":

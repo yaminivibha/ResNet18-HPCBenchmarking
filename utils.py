@@ -16,7 +16,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.optim import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop
 
-OPTIMIZERS = ["SGD", "Adam", "RMSprop", "Adagrad", "Adadelta", "Adamax"]
+OPTIMIZERS = ["SGD", "Adam", "RMSprop", "Adagrad", "Adadelta", "Adamax", "SGD_Nesterov"]
 
 
 def print_config(args):
@@ -28,23 +28,32 @@ def print_config(args):
     print(f"Data Path:              {args.data_path}")
     print(f"Learning Rate:          {args.lr}")
     print(f"Device:                 {args.device}")
-    # print(f"Resume:                 {args.resume}")
 
 
 def set_optimizer(args):
     """Set optimizer."""
+    args.hyperparameters = {
+        "lr": 0.1,
+        "weight_decay": 0.0005,
+    }
     if args.optimizer == "SGD":
         optimizer = SGD
+        args.hyperparameters["momentum"] = 0.9
+        args.optimizer_name = "SGD"
+    elif args.optimizer == "SGD_Nesterov":
+        optimizer = SGD
+        args.hyperparameters["nesterov"] = True
+        args.hyperparameters["momentum"] = 0.9
+        args.optimizer_name = "SGD_Nesterov"
     elif args.optimizer == "Adam":
         optimizer = Adam
-    elif args.optimizer == "RMSprop":
-        optimizer = RMSprop
+        args.optimizer_name = "Adam"
     elif args.optimizer == "Adagrad":
         optimizer = Adagrad
+        args.optimizer_name = "Adagrad"
     elif args.optimizer == "Adadelta":
         optimizer = Adadelta
-    elif args.optimizer == "Adamax":
-        optimizer = Adamax
+        args.optimizer_name = "Adadelta"
     else:
         raise ValueError(f"Invalid optimizer \n Must be in {OPTIMIZERS}")
     return optimizer
