@@ -54,8 +54,8 @@ def main():
         raise ValueError("Invalid exercise")
     args.device = "cuda" if (torch.cuda.is_available() and args.cuda) else "cpu"
     args.optimizer = set_optimizer(args)
+    args.filename = args.outfile if args.outfile else args.exercise + ".txt"
     print_config(args)
-    filename = args.outfile if args.outfile else args.exercise + ".txt"
     outfile = open(filename, "a")
 
     # Data
