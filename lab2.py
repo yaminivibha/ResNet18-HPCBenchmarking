@@ -226,7 +226,7 @@ def main():
 
                 total_loadtime += load_time_train + load_time_test
 
-                print(f"Epoch {epoch}:")
+                print(f"Epoch {epoch}:", file=outfile)
                 print(
                     f"    Load time: {load_time_train + load_time_test}", file=outfile
                 )
