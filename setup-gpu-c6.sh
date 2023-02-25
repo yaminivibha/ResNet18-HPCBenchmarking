@@ -21,8 +21,8 @@ rm -rf ~/pytorch-cifar-benchmarking/data
 
 conda activate hw2
 
-python3 lab2.py C6 --cuda --optimizer SGD
-python3 lab2.py C6 --cuda --optimizer SGD_Nesterov
-python3 lab2.py C6 --cuda --optimizer Adam
-python3 lab2.py C6 --cuda --optimizer Adagrad
-python3 lab2.py C6 --cuda --optimizer Adadelta
+python3 lab2.py C6 --cuda --optimizer SGD --filename C6-SGD.txt
+python3 lab2.py C6 --cuda --optimizer SGD_Nesterov --filename C6-SGD-Nesterov.txt
+python3 lab2.py C6 --cuda --optimizer Adam --filename C6-Adam.txt
+python3 lab2.py C6 --cuda --optimizer Adagrad --filename C6-Adagrad.txt
+python3 lab2.py C6 --cuda --optimizer Adadelta --filename C6-Adadelta.txt

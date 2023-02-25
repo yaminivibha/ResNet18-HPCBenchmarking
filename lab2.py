@@ -32,6 +32,7 @@ def main():
     parser = argparse.ArgumentParser(description="PyTorch CIFAR10 Training")
 
     parser.add_argument("exercise", default="C1", help="problem # on HW")
+    parser.add_argument("--outfile", default="outfile.txt", help="output filename")
     parser.add_argument("--epochs", default=5, type=int, help="num epochs; default 5")
     parser.add_argument("--optimizer", default="SGD", help="optimizer, default SGD")
     parser.add_argument(
@@ -55,7 +56,8 @@ def main():
     args.device = "cuda" if (torch.cuda.is_available() and args.cuda) else "cpu"
     args.optimizer = set_optimizer(args)
     print_config(args)
-    outfile = open(args.exercise + ".txt", "w")
+    filename = args.outfile if args.outfile else args.exercise + ".txt"
+    outfile = open(filename, "w")
 
     # Data
     print("==> Preparing data..")
@@ -336,7 +338,7 @@ def main():
         print(
             f"======== C6: Optimizer {args.optimizer_name} ========\n\n", file=outfile
         )
-
+        outfile = open(args.outfile, "a")
         args.dataloader_workers = 4
         args.device = "cuda"
         print("==> Preparing data..")
@@ -347,7 +349,7 @@ def main():
         average_train_losses = []
         for epoch in range(args.epochs):
             start_time = time.time()
-            loss = train(epoch)["average_train_loss"]
+            loss = train(epoch)["train_loss"]
             train_time = time.time()
             scheduler.step()
 
