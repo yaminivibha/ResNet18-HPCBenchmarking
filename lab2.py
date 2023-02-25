@@ -1,4 +1,4 @@
-"""Train CIFAR10 with PyTorch."""
+"""Benchmark CIFAR10 with PyTorch on CPU & GPU"""
 # Code Attribution: https://github.com/kuangliu/pytorch-cifar
 import argparse
 import time
