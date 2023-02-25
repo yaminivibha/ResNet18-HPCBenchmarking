@@ -251,6 +251,7 @@ def main():
         print("======== C4: Profiling Starting from C3 ========\n\n", file=outfile)
 
         num_workers = [1, 4]
+        io_times = []
         for workers in num_workers:
             args.num_workers = workers
             trainloader, trainset, testloader, testset = load_data(args)
