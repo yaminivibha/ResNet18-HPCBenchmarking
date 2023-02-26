@@ -51,9 +51,9 @@ def main():
     )
     parser.add_argument(
         "--no_batch_norms",
-        default=True,
+        default=False,
         action="store_true",
-        help="batch norms usage; default True",
+        help="no batch norms; default False",
     )
     args = parser.parse_args()
 
@@ -221,130 +221,150 @@ def main():
     #### C3: I/O Optimization ####
     if args.exercise == "C3":
         print("======== C3: I/O Optimization ========\n\n", file=outfile)
+        print(f"NUM_WORKERS {args.dataloader_workers} ####\n\n", file=outfile)
 
-        num_workers = [0, 4, 8, 12]
-        io_times = []
-        compute_times = []
-        for workers in num_workers:
-            print(f"#### NUM_WORKERS {workers} ####\n\n", file=outfile)
-            args.num_workers = workers
-            print("==> Preparing data..")
-            trainloader, trainset, testloader, testset = load_data(args)
-            total_loadtime = 0
-            total_runtime = 0
-            for epoch in range(args.epochs):
-                start_time = time.time()
-                load_time_train = train(epoch)["load_time"]
-                train_time = time.time()
-                load_time_test = test(epoch)["load_time"]
-                train_time = time.time()
-                scheduler.step()
+        print("==> Preparing data..")
+        trainloader, trainset, testloader, testset = load_data(args)
+        train_times = []
+        test_times = []
+        total_times = []
+        load_times = []
+        for epoch in range(args.epochs):
+            start = time.perf_counter()
+            load_time_train = train(epoch)["load_time"]
+            train_time = time.perf_counter()
+            load_time_test = test(epoch)["load_time"]
+            test_time = time.perf_counter()
 
-                total_loadtime += load_time_train + load_time_test
+            train_times.append(train_time - start)
+            test_times.append(test_time - train_time)
+            total_times.append(test_time - start)
+            load_times.append(load_time_train + load_time_test)
+            scheduler.step()
 
-                print(f"Epoch {epoch}:", file=outfile)
-                print(
-                    f"    Load time: {load_time_train + load_time_test}", file=outfile
-                )
-                print(f"    Total time: {train_time - start_time}", file=outfile)
-
-            print(f"#### NUM_WORKERS {workers} 5 EPOCH SUMMARY ####\n\n", file=outfile)
-            print(f"    Total load time: {total_loadtime}", file=outfile)
-            print(f"    Total compute time: {total_runtime}", file=outfile)
-            io_times.append(total_loadtime)
-            compute_times.append(total_runtime)
+            print(f"    Total load time: {sum(load_times)}")
+            print(f"    Total compute time: {sum(total_times)}")
 
         print("#### C3 Summary ####\n\n", file=outfile)
         table = PrettyTable([])
-        table.add_column("num_workers", num_workers)
-        table.add_column("data loading time (secs)", io_times)
-        table.add_column("total computation time (secs)", compute_times)
+        table.add_column("epoch", range(1, args.epochs + 1))
+        table.add_column("data load time for train + test (secs)", load_times)
+        table.add_column("train time (secs)", train_times)
+        table.add_column("total time (secs)", total_times)
         print(table, file=outfile)
+        print(
+            f"Average train time per epoch: {sum(train_times) / len(train_times)}",
+            file=outfile,
+        )
+        print(
+            f"Average loading time per epoch: {sum(load_times) / len(test_times)}",
+            file=outfile,
+        )
+        print(
+            f"Average total time per epoch: {sum(total_times) / len(total_times)}",
+            file=outfile,
+        )
+        print(f"Total time for {args.epochs} epochs: {sum(total_times)}", file=outfile)
         outfile.close()
 
     ####C4: Profiling Starting from C3####
     if args.exercise == "C4":
         print("======== C4: Profiling Starting from C3 ========\n\n", file=outfile)
+        print(f"NUM_WORKERS {args.dataloader_workers} ####\n\n", file=outfile)
 
-        num_workers = [1, 4]
-        io_times = []
-        for workers in num_workers:
-            args.num_workers = workers
-            trainloader, trainset, testloader, testset = load_data(args)
-            total_loadtime = 0
-            total_computetime = 0
-            for epoch in range(args.epochs):
-                start_time = time.time()
-                load_time_train = train(epoch)["load_time"]
-                train_time = time.time()
-                load_time_test = test(epoch)["load_time"]
-                train_time = time.time()
-                scheduler.step()
-                total_loadtime += load_time_train + load_time_test
-                total_computetime += train_time - start_time
-                print(f"Epoch {epoch} ", file=outfile)
-                print(
-                    f"    Total Load Time {load_time_test + load_time_train}\n",
-                    file=outfile,
-                )
-                print(f"    Train Time {train_time - start_time}\n", file=outfile)
-                print(f"    Total Time {train_time - start_time}\n", file=outfile)
-            io_times.append(total_loadtime)
-            print(f"#### NUM_WORKERS {workers} SUMMARY ####\n\n", file=outfile)
-            print(f"Total load time: {total_loadtime}", file=outfile)
-            print(f"Total compute time: {total_computetime}", file=outfile)
+        print("==> Preparing data..")
+        trainloader, trainset, testloader, testset = load_data(args)
+        train_times = []
+        test_times = []
+        total_times = []
+        load_times = []
+        for epoch in range(args.epochs):
+            start = time.perf_counter()
+            load_time_train = train(epoch)["load_time"]
+            train_time = time.perf_counter()
+            load_time_test = test(epoch)["load_time"]
+            test_time = time.perf_counter()
+
+            train_times.append(train_time - start)
+            test_times.append(test_time - train_time)
+            total_times.append(test_time - start)
+            load_times.append(load_time_train + load_time_test)
+            scheduler.step()
+
+            print(f"    Total load time: {sum(load_times)}")
+            print(f"    Total compute time: {sum(total_times)}")
 
         print("#### C4 Summary ####\n\n", file=outfile)
         table = PrettyTable([])
-        table.add_column("No. Workers", num_workers)
-        table.add_column("Data Loading Time (secs)", io_times)
+        table.add_column("epoch", range(1, args.epochs + 1))
+        table.add_column("data load time for train + test (secs)", load_times)
+        table.add_column("train time (secs)", train_times)
+        table.add_column("total time (secs)", total_times)
         print(table, file=outfile)
-
+        print(
+            f"Average train time per epoch: {sum(train_times) / len(train_times)}",
+            file=outfile,
+        )
+        print(
+            f"Average loading time per epoch: {sum(load_times) / len(test_times)}",
+            file=outfile,
+        )
+        print(
+            f"Average total time per epoch: {sum(total_times) / len(total_times)}",
+            file=outfile,
+        )
+        print(f"Total time for {args.epochs} epochs: {sum(total_times)}", file=outfile)
         outfile.close()
 
     ####C5: Training GPU ####
     if args.exercise == "C5":
         print("======== C5: Training GPU ========\n\n", file=outfile)
 
-        args.dataloader_workers = 4
-        args.device = "cuda"
+        print(f"NUM_WORKERS {args.dataloader_workers} ####\n\n", file=outfile)
+
         print("==> Preparing data..")
         trainloader, trainset, testloader, testset = load_data(args)
-
-        load_times = []
         train_times = []
+        test_times = []
         total_times = []
-        total_loadtime = 0
-
+        load_times = []
         for epoch in range(args.epochs):
-            start_time = time.time()
+            start = time.perf_counter()
             load_time_train = train(epoch)["load_time"]
-            train_time = time.time()
+            train_time = time.perf_counter()
             load_time_test = test(epoch)["load_time"]
-            train_time = time.time()
-            scheduler.step()
-            total_loadtime += load_time_train + load_time_test
-            train_times.append(train_time - start_time)
+            test_time = time.perf_counter()
+
+            train_times.append(train_time - start)
+            test_times.append(test_time - train_time)
+            total_times.append(test_time - start)
             load_times.append(load_time_train + load_time_test)
-            total_times.append(train_time - start_time)
-            print(f"Epoch {epoch} ", file=outfile)
-            print(
-                f"    Total Load Time {load_time_test + load_time_train}\n",
-                file=outfile,
-            )
-            print(f"    Train Time {train_time - start_time}\n", file=outfile)
-            print(f"    Total Time {train_time - start_time}\n", file=outfile)
+            scheduler.step()
+
+            print(f"    Total load time: {sum(load_times)}")
+            print(f"    Total compute time: {sum(total_times)}")
 
         print(f"#### C5 Summary ####\n\n", file=outfile)
         print(f"With GPU: Dataloading + Computation Time")
         table = PrettyTable([])
-
-        table.add_column("No. Workers", [4])
-        table.add_column("Loading Time (secs)", [total_loadtime])
-        table.add_column("Training Time (secs)", [sum(train_times)])
-        table.add_column("Total Time (secs)", [sum(total_times)])
+        table.add_column("epoch", range(1, args.epochs + 1))
+        table.add_column("data load time for train + test (secs)", load_times)
+        table.add_column("train time (secs)", train_times)
+        table.add_column("total time (secs)", total_times)
         print(table, file=outfile)
-
+        print(
+            f"Average train time per epoch: {sum(train_times) / len(train_times)}",
+            file=outfile,
+        )
+        print(
+            f"Average loading time per epoch: {sum(load_times) / len(test_times)}",
+            file=outfile,
+        )
+        print(
+            f"Average total time per epoch: {sum(total_times) / len(total_times)}",
+            file=outfile,
+        )
+        print(f"Total time for {args.epochs} epochs: {sum(total_times)}", file=outfile)
         outfile.close()
 
     #### C6: Experimenting with different optimizers ####
@@ -354,13 +374,18 @@ def main():
         )
         args.dataloader_workers = 4
         args.device = "cuda"
+
         print("==> Preparing data..")
         trainloader, trainset, testloader, testset = load_data(args)
+
+        print("==> Synchronizing GPU..")
+        torch.cuda.synchronize()  # wait for warm-up to finish
 
         train_times = []
         accuracies = []
         average_train_losses = []
         for epoch in range(args.epochs):
+            torch.cuda.synchronize()
             start_time = time.time()
             loss = train(epoch)["ave_train_loss"]
             train_time = time.time()
@@ -395,11 +420,15 @@ def main():
         args.device = "cuda"
         print("==> Preparing data..")
         trainloader, trainset, testloader, testset = load_data(args)
+        print("==> Synchronizing GPU..")
+        torch.cuda.synchronize()  # wait for warm-up to finish
 
         train_times = []
         accuracies = []
         average_train_losses = []
         for epoch in range(args.epochs):
+            torch.cuda.synchronize()  # wait for warm-up to finish
+
             start_time = time.time()
             loss = train(epoch)["ave_train_loss"]
             train_time = time.time()
@@ -428,33 +457,26 @@ def main():
 
     #### Q3: Num Trainable Parameters ####
     if args.exercise == "Q3":
-        print(f"======== Q3: Num Trainable Parameters ========\n\n", file=outfile)
+        print(f"======== Q3: Num Trainable Parameters ========", file=outfile)
+        print(f"Optimizer: {args.optimizer_name}\n", file=outfile)
 
-        def count_parameters(model):
+        def count_parameters_and_gradients(model):
             table = PrettyTable(["Modules", "Trainable Parameters"])
             total_params = 0
+            total_grads = 0
             for name, parameter in model.named_parameters():
                 if not parameter.requires_grad:
                     continue
+                if parameter.grad():
+                    total_grads += parameter.grad().numel()
                 params = parameter.numel()
                 table.add_row([name, params])
                 total_params += params
             print(table, file=outfile)
             print(f"Total Trainable Params: {total_params}", file=outfile)
+            print(f"Total Gradients: {total_grads}", file=outfile)
 
-        def count_gradients(model):
-            table = PrettyTable(["Modules", "Gradients"])
-            total_params = 0
-            for name, parameter in model.named_parameters():
-                if not parameter.requires_grad:
-                    continue
-                params = parameter.numel()
-                table.add_row([name, params])
-                total_params += params
-            print(table, file=outfile)
-            print(f"Total Gradients: {total_params}", file=outfile)
-
-        count_parameters(net)
+        count_parameters_and_gradients(net)
         return
 
 
