@@ -202,17 +202,20 @@ def main():
         table.add_column("data load time for train + test (secs)", load_times)
         table.add_column("train time (secs)", train_times)
         table.add_column("total time (secs)", total_times)
-        outfile.append(table)
-        outfile.append(
+        print(table, file=outfile)
+        print(
             f"Average train time per epoch: {sum(train_times) / len(train_times)}",
+            file=outfile,
         )
-        outfile.append(
-            f"Average loading time per epoch: {sum(load_times) / len(test_times)}"
+        print(
+            f"Average loading time per epoch: {sum(load_times) / len(test_times)}",
+            file=outfile,
         )
-        outfile.append(
-            f"Average total time per epoch: {sum(total_times) / len(total_times)}"
+        print(
+            f"Average total time per epoch: {sum(total_times) / len(total_times)}",
+            file=outfile,
         )
-        outfile.append(f"Total time for {args.epochs} epochs: {sum(total_times)}")
+        print(f"Total time for {args.epochs} epochs: {sum(total_times)}", file=outfile)
         outfile.close()
 
     #### C3: I/O Optimization ####
