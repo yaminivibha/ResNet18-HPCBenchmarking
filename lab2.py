@@ -49,6 +49,12 @@ def main():
     parser.add_argument(
         "--cuda", default=False, action="store_true", help="cuda usage; default False"
     )
+    parser.add_argument(
+        "--no_batch_norms",
+        default=True,
+        action="store_true",
+        help="batch norms usage; default True",
+    )
     args = parser.parse_args()
 
     # Config
@@ -67,7 +73,10 @@ def main():
 
     # Model Setup
     print("==> Building model..")
-    net = ResNet18()
+    if args.no_batch_norms:
+        net = ResNet18NoBatchNorm()
+    else:
+        net = ResNet18()
     net = net.to(args.device)
     if args.device == "cuda":
         net = torch.nn.DataParallel(net)
@@ -377,7 +386,7 @@ def main():
 
     #### C7: Experimenting with Batch Norm ####
     if args.exercise == "C7":
-        print(f"======== C7: Batch Norm ========\n\n", file=outfile)
+        print(f"======== C7: No Batch Norm ========\n\n", file=outfile)
 
         args.dataloader_workers = 4
         args.device = "cuda"
@@ -387,7 +396,6 @@ def main():
         train_times = []
         accuracies = []
         average_train_losses = []
-
         for epoch in range(args.epochs):
             start_time = time.time()
             loss = train(epoch)["ave_train_loss"]
@@ -396,16 +404,22 @@ def main():
 
             average_train_losses.append(loss)
             train_times.append(train_time - start_time)
-            accuracies.append(test(epoch)["accuracy"])
+            accuracy = test(epoch)["accuracy"]
+            accuracies.append(accuracy)
+
             print(f"Epoch {epoch} ", file=outfile)
             print(f"    Train Time {train_time - start_time}\n", file=outfile)
+            print(f"    Accuracy {accuracy}\n", file=outfile)
 
-        print(f"#### C7 Summary ####\n\n", file=outfile)
+        print(
+            f"#### C6 Summary For Optimizer {args.optimizer_name} ####\n\n",
+            file=outfile,
+        )
         table = PrettyTable([])
         table.add_column("Epoch", [i + 1 for i in range(args.epochs)])
-        table.add_column("Training Time (secs)", [sum(train_times)])
-        table.add_column("Accuracy", [accuracies[-1]])
-        table.add_column("Average Train Loss", [average_train_losses[-1]])
+        table.add_column("Training Time (secs)", train_times)
+        table.add_column("Accuracy", accuracies)
+        table.add_column("Average Train Loss", average_train_losses)
         print(table, file=outfile)
         outfile.close()
 

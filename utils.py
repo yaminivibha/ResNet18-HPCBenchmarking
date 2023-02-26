@@ -28,6 +28,7 @@ def print_config(args):
     print(f"Data Path:              {args.data_path}")
     print(f"Learning Rate:          {args.lr}")
     print(f"Device:                 {args.device}")
+    print(f"Batch Norms:            {not args.no_batch_norms}")
     print(f"Output filename:        {args.filename}")
 
 
