@@ -1,4 +1,4 @@
-# pytorch-cifar-benchmarking
+# Implementing and Benchmarking Resnet-18 for CIFAR10 Dataset in PyTorch
 
 Implementing and Benchmarking ResNet-18 in Pytorch on the CIFAR10 dataset. 
 Model Architecture c/o [He, Zhang et. al](https://arxiv.org/abs/1512.03385)
