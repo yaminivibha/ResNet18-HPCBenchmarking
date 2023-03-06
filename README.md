@@ -7,12 +7,17 @@ For use with Columbia University's High Performance Computing Cluster, [Habanero
 
 ## Usage
 
-```load module conda
+~~~
+load module conda
    conda create -name hw2
    conda activate hw2
    conda install pytorch
    conda install torchvision
-   conda install prettytables```
+   conda install prettytables 
    
-   Followed by 
+   
+   ~~~
+   
+Followed by
+
    ``` sbatch execute.sh```
